@@ -24,10 +24,16 @@
     --line-strong:#d6d0c5;
     --accent:#fecc07;      /* Fried Egg Yellow */
     --accent-press:#e6b800;
+    --accent-tint:rgba(254,204,7,.16);  /* selected states */
     --dark:#000000;
     --red:#c0392b;
     --ok:#3f7d54;
     --shadow:0 1px 3px rgba(0,0,0,.06);
+    /* radius: one control value, one card value */
+    --r-control:12px;      /* inputs, pills, buttons, toast */
+    --r-card:16px;
+    --r-pill:999px;
+    /* spacing sits on a 4px grid: 4 8 12 16 20 24 */
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0}
@@ -35,35 +41,35 @@
     font-family:"FunkisA","Avenir Next","Avenir",Helvetica,Arial,sans-serif;
     color:var(--ink);background:var(--bg);line-height:1.55;
   }
-  .wrap{max-width:680px;margin:0 auto;padding:22px 16px 140px}
+  .wrap{max-width:680px;margin:0 auto;padding:20px 16px 140px}
 
-  .topbar{max-width:680px;margin:0 auto;padding:22px 16px 4px;text-align:center}
+  .topbar{max-width:680px;margin:0 auto;padding:20px 16px 4px;text-align:center}
   .logo{margin-bottom:12px;line-height:0;color:var(--ink)}
   .logo img,.logo svg{height:48px;width:auto;display:inline-block}
-  .topbar h1{margin:6px 0 2px;font-size:26px;font-weight:700}
+  .topbar h1{margin:8px 0 2px;font-size:26px;font-weight:700}
   .topbar .date{font-size:13px;color:var(--muted)}
-  .steps{display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+  .steps{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
   .step{font-size:11px;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--line-strong);
-        border-radius:999px;padding:5px 11px}
+        border-radius:var(--r-pill);padding:6px 12px}
   .step.active{background:var(--ink);color:#fff;border-color:var(--ink)}
   .step.done{background:var(--accent);color:var(--ink);border-color:var(--accent)}
   .step.clickable{cursor:pointer}
   .step.clickable:hover{border-color:var(--ink)}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin-top:16px;box-shadow:var(--shadow)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:24px;margin-top:16px;box-shadow:var(--shadow)}
   .card h2{margin:0 0 4px;font-size:20px;font-weight:700;text-align:center}
-  .card .sub{margin:0 0 6px;text-align:center;color:var(--muted);font-size:14px}
-  .divider{height:6px;background:var(--line-strong);border-radius:6px;margin:18px 0 4px}
+  .card .sub{margin:0 0 8px;text-align:center;color:var(--muted);font-size:14px}
+  .divider{height:4px;background:var(--line-strong);border-radius:var(--r-pill);margin:20px 0 4px}
 
   p.lead{margin:0 0 12px}
-  .field-label{display:block;font-weight:600;margin:0 0 8px;font-size:15px}
+  .field-label{display:block;font-weight:600;margin:0 0 8px;font-size:15px;text-align:center}
   .req{color:var(--red);font-weight:700}
-  .hint{color:var(--muted);font-weight:400;font-size:13px;display:block;margin-top:3px}
-  .tips{list-style:none;padding:0;margin:10px auto 0;text-align:left;max-width:440px}
-  .tips li{position:relative;padding:7px 0 7px 26px;font-size:14.5px;line-height:1.5}
+  .hint{color:var(--muted);font-weight:400;font-size:13px;display:block;margin-top:4px}
+  .tips{list-style:none;padding:0;margin:12px auto 0;text-align:left;max-width:440px}
+  .tips li{position:relative;padding:8px 0 8px 24px;font-size:15px;line-height:1.5}
   .tips li::before{content:"";position:absolute;left:5px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
   .badge{display:inline-block;background:var(--accent);color:var(--ink);font-size:11px;font-weight:700;
-         letter-spacing:.06em;text-transform:uppercase;padding:7px 14px;border-radius:999px;margin-bottom:14px}
+         letter-spacing:.06em;text-transform:uppercase;padding:8px 14px;border-radius:var(--r-pill);margin-bottom:16px}
   /* collectible tastemaker badge (thank-you screen) */
   .tm-badge{width:198px;height:198px;margin:6px auto 2px;border-radius:50%;
             background:radial-gradient(circle at 50% 34%, #ffe066, var(--accent));
@@ -78,19 +84,19 @@
 
   input[type=text],textarea,select{
     width:100%;font-family:inherit;font-size:16px;color:var(--ink);background:#fff;
-    border:1px solid var(--line-strong);border-radius:10px;padding:12px 14px;
+    border:1px solid var(--line-strong);border-radius:var(--r-control);padding:12px 14px;
   }
   textarea{min-height:96px;resize:vertical}
   select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%237a766e' d='M6 8 0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
   input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(254,204,7,.4)}
 
-  .dish{border-top:1px solid var(--line);padding-top:20px;margin-top:22px}
+  .dish{border-top:1px solid var(--line);padding-top:20px;margin-top:24px}
   .dish:first-of-type{border-top:none;padding-top:4px;margin-top:8px}
-  .dish-title{font-size:19px;font-weight:700;text-align:center;margin:0 0 14px}
-  .q{margin-top:18px}
-  .q-text{font-weight:600;font-size:15px;margin:0 0 10px;text-align:center}
+  .dish-title{font-size:18px;font-weight:700;text-align:center;margin:0 0 16px}
+  .q{margin-top:20px}
+  .q-text{font-weight:600;font-size:15px;margin:0 0 12px;text-align:center}
 
-  .scale{display:flex;justify-content:center;gap:14px;margin-top:6px}
+  .scale{display:flex;justify-content:center;gap:12px;margin-top:8px}
   .scale label{cursor:pointer}
   .scale input{position:absolute;opacity:0;width:0;height:0}
   .scale .dot{
@@ -105,10 +111,10 @@
   .scale-ends-3 span:last-child{text-align:right}
 
   .pills{display:flex;flex-direction:column;gap:8px;max-width:340px;margin:0 auto}
-  .pill{display:flex;align-items:center;gap:10px;border:1px solid var(--line-strong);border-radius:10px;padding:11px 14px;cursor:pointer;background:#fff;font-size:15px}
+  .pill{display:flex;align-items:center;gap:10px;border:1px solid var(--line-strong);border-radius:var(--r-control);padding:12px 14px;cursor:pointer;background:#fff;font-size:15px}
   .pill:hover{border-color:var(--ink)}
   .pill input{accent-color:var(--ink);width:18px;height:18px;margin:0;flex:none}
-  .pill.checked{border-color:var(--ink);background:#faf8f2}
+  .pill.checked{border-color:var(--ink);background:var(--accent-tint)}
 
   .gate-wrap{max-width:340px;margin:0 auto}
   .dish-body.hidden{display:none}
@@ -122,24 +128,26 @@
        padding:12px 16px;z-index:30;box-shadow:0 -2px 12px rgba(0,0,0,.05)}
   .bar-inner{max-width:680px;margin:0 auto;display:flex;gap:12px;justify-content:space-between;align-items:center}
   button{font-family:inherit}
-  .btn{border:none;border-radius:11px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer}
+  .btn{border:1px solid transparent;border-radius:var(--r-control);padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer}
   .btn-primary{background:var(--accent);color:var(--ink)}
   .btn-primary:active{background:var(--accent-press)}
-  .btn-dark{background:var(--dark);color:#fff}
+  /* secondary (Back): quiet outline so the yellow primary keeps the eye */
+  .btn-dark{background:#fff;color:var(--ink);border-color:var(--line-strong)}
+  .btn-dark:hover{border-color:var(--ink)}
   .btn-lg{flex:1}
   .grow{flex:1}
 
   .toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--red);color:#fff;
-         padding:12px 18px;border-radius:10px;font-size:14px;z-index:50;box-shadow:var(--shadow);display:none;max-width:92%}
+         padding:12px 16px;border-radius:var(--r-control);font-size:14px;z-index:50;box-shadow:var(--shadow);display:none;max-width:92%}
 
   .roundmsg{text-align:center;padding:40px 12px}
-  .roundmsg .tick{width:66px;height:66px;border-radius:50%;background:var(--accent);color:var(--ink);
-       display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 16px}
-  .roundmsg h2{margin:0 0 6px}
+  .roundmsg .tick{width:64px;height:64px;border-radius:50%;background:var(--accent);color:var(--ink);
+       display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 16px}
+  .roundmsg h2{margin:0 0 8px}
   .roundmsg p{color:var(--muted);margin:0 0 4px}
 
   .hidden{display:none}
-  .foot-note{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
+  .foot-note{text-align:center;color:var(--muted);font-size:12px;margin-top:24px}
 </style>
 </head>
 <body>
@@ -159,7 +167,7 @@
     <div class="card">
       <div class="badge" id="clubBadge">Grain Tastemakers</div>
       <h2 id="welcomeHeading">Welcome to The Grain Kitchen!</h2>
-      <p class="sub" style="margin-bottom:18px">You're now part of the Grain Tastemakers &mdash; the crew who taste-test what makes our menu. We're so excited to have you shaping this year's Christmas spread!</p>
+      <p class="sub" style="margin-bottom:16px">You're now part of the Grain Tastemakers &mdash; the crew who taste-test what makes our menu. We're so excited to have you shaping this year's Christmas spread!</p>
       <div class="q" id="q-name">
         <label class="field-label" for="name">First, what's your name? <span class="req">*</span></label>
         <input type="text" id="name" autocomplete="name" placeholder="e.g. Candice" />
@@ -167,7 +175,7 @@
       </div>
       <div class="divider"></div>
       <h3 style="text-align:center;margin:16px 0 2px;font-size:16px;font-weight:700">How to taste</h3>
-      <p class="sub" id="tasteIntro" style="margin-bottom:6px">Here's the game plan:</p>
+      <p class="sub" id="tasteIntro" style="margin-bottom:8px">Here's the game plan:</p>
       <ul class="tips">
         <li>You'll be guided through it, round by round &mdash; just follow along.</li>
         <li>Taste one dish at a time and try not to mix flavours (a sip of water between helps).</li>
@@ -295,7 +303,7 @@ const ROUNDS = [
    Paste your Apps Script Web App URL here and every submission
    will POST to your sheet automatically. Leave blank for now.
    ============================================================ */
-const SHEET_WEBHOOK_URL = "";
+const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbydhLZCRWtYkinCi69YVqtenDbrc1PnAZ9HgJQxaVJWoGPXTrBuKDEy2SisnAzowoCs/exec";
 
 /* rounds that actually have dishes drive the flow */
 const ACTIVE_ROUNDS = ROUNDS.filter(r=>r.dishes && r.dishes.length);
