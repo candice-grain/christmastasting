@@ -440,7 +440,7 @@ function renderSteps(activeKey){
   }).join('');
 }
 function roundStepKey(){return 'r'+ROUNDS.indexOf(ACTIVE_ROUNDS[roundIndex]);}
-function setBar(html){document.getElementById('barInner').innerHTML=html;}
+function setBar(html){document.getElementById('bar').style.display='';document.getElementById('barInner').innerHTML=html;}
 
 /* ---- clickable step navigation ---- */
 function onStepClick(key){
@@ -502,7 +502,7 @@ function nameNext(){
   const name=document.getElementById('name');
   if(!name.value.trim()){document.getElementById('q-name').classList.add('invalid');name.focus();showToast('Please enter your name.');return;}
   document.getElementById('q-name').classList.remove('invalid');
-  current={name:name.value.trim(), timestamp:new Date().toISOString(), answers:{}};
+  current={id:'g_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:name.value.trim(), timestamp:new Date().toISOString(), answers:{}};
   roundIndex=0;
   goRound();
 }
@@ -546,6 +546,7 @@ function validateRound(){
 function submitRound(){
   if(!validateRound()) return;
   saveRoundToState();
+  syncToSheet();
 
   if(roundIndex < ACTIVE_ROUNDS.length-1){
     show('screen-between');renderSteps(roundStepKey());
@@ -644,8 +645,7 @@ function finish(){
   const bn=document.getElementById('badgeName'); if(bn) bn.textContent=current.name;
   const bl=document.querySelector('.tm-logo'), hl=document.querySelector('.logo img'); if(bl&&hl) bl.src=hl.src;
   show('screen-thanks');renderSteps('done');
-  setBar(`<button class="btn btn-primary btn-lg" id="nextGuest">Next guest →</button>`);
-  document.getElementById('nextGuest').onclick=resetAll;
+  document.getElementById('bar').style.display='none';
 }
 function resetAll(){
   current=null;roundIndex=0;currentStop='about';maxStopIndex=0;
@@ -724,8 +724,10 @@ function columns(){
   return cols;
 }
 function getAll(){try{return JSON.parse(localStorage.getItem(STORE_KEY))||[]}catch(_){return[]}}
+function buildFlat(){ return current ? Object.assign({id:current.id, timestamp:current.timestamp, name:current.name}, current.answers) : {}; }
+function syncToSheet(){ if(current) submitToSheet(buildFlat()); }   // incremental upsert after each round
 function persist(resp){
-  const flat={timestamp:resp.timestamp,name:resp.name,...resp.answers};
+  const flat=Object.assign({id:resp.id, timestamp:resp.timestamp, name:resp.name}, resp.answers);
   const all=getAll();all.push(flat);localStorage.setItem(STORE_KEY,JSON.stringify(all)); // local backup
   submitToSheet(flat);
 }
