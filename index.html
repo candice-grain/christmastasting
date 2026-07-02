@@ -62,14 +62,14 @@
   .divider{height:4px;background:var(--line-strong);border-radius:var(--r-pill);margin:20px 0 4px}
 
   p.lead{margin:0 0 12px}
-  .field-label{display:block;font-weight:600;margin:0 0 8px;font-size:15px;text-align:center}
+  .field-label{display:block;font-weight:400;margin:0 0 8px;font-size:15px;text-align:center}
   .req{color:var(--red);font-weight:700}
   .hint{color:var(--muted);font-weight:400;font-size:13px;display:block;margin-top:4px}
   .tips{list-style:none;padding:0;margin:12px auto 0;text-align:left;max-width:440px}
   .tips li{position:relative;padding:8px 0 8px 24px;font-size:15px;line-height:1.5}
   .tips li::before{content:"";position:absolute;left:5px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
-  .badge{display:inline-block;background:var(--accent);color:var(--ink);font-size:11px;font-weight:700;
-         letter-spacing:.06em;text-transform:uppercase;padding:8px 14px;border-radius:var(--r-pill);margin-bottom:16px}
+  .badge{display:block;width:fit-content;background:var(--accent);color:var(--ink);font-size:11px;font-weight:700;
+         letter-spacing:.06em;text-transform:uppercase;padding:8px 14px;border-radius:var(--r-pill);margin:0 auto 16px}
   /* collectible tastemaker badge (thank-you screen) */
   .tm-badge{width:198px;height:198px;margin:6px auto 2px;border-radius:50%;
             background:radial-gradient(circle at 50% 34%, #ffe066, var(--accent));
@@ -94,7 +94,7 @@
   .dish:first-of-type{border-top:none;padding-top:4px;margin-top:8px}
   .dish-title{font-size:18px;font-weight:700;text-align:center;margin:0 0 16px}
   .q{margin-top:20px}
-  .q-text{font-weight:600;font-size:15px;margin:0 0 12px;text-align:center}
+  .q-text{font-weight:400;font-size:15px;margin:0 0 12px;text-align:center}
 
   .scale{display:flex;justify-content:center;gap:12px;margin-top:8px}
   .scale label{cursor:pointer}
@@ -492,7 +492,7 @@ function goName(){
     const ti=document.getElementById('tasteIntro');
     if(ti) ti.textContent = current.name ? `Alright ${current.name}, here's the game plan:` : "Here's the game plan:";
     const badge=document.getElementById('clubBadge');
-    if(badge) badge.textContent = current.name ? `Tastemaker ${current.name}` : 'Grain Tastemakers';
+    if(badge) badge.textContent = 'Grain Tastemakers';
   }
   setBar(`<button class="btn btn-primary btn-lg" id="nameNext">${resuming?'Continue →':'Start tasting →'}</button>`);
   document.getElementById('nameNext').onclick = resuming ? resumeFromName : nameNext;
@@ -705,7 +705,7 @@ document.addEventListener('input', e=>{
     const ti=document.getElementById('tasteIntro');
     if(ti) ti.textContent = v ? `Alright ${v}, here's the game plan:` : "Here's the game plan:";
     const badge=document.getElementById('clubBadge');
-    if(badge) badge.textContent = v ? `Tastemaker ${v}` : 'Grain Tastemakers';
+    if(badge) badge.textContent = 'Grain Tastemakers';
     if(v) document.getElementById('q-name').classList.remove('invalid');
   }
   if(e.target.tagName==='TEXTAREA'){const q=e.target.closest('.q');if(q && e.target.value.trim())q.classList.remove('invalid');}
@@ -724,10 +724,36 @@ function columns(){
   return cols;
 }
 function getAll(){try{return JSON.parse(localStorage.getItem(STORE_KEY))||[]}catch(_){return[]}}
-function buildFlat(){ return current ? Object.assign({id:current.id, timestamp:current.timestamp, name:current.name}, current.answers) : {}; }
+/* ---- readable column labels for the sheet ---- */
+const FIELD_LABELS={
+  tasted:'Tasted?',
+  presentation:'Presentation (1-5)',
+  presentation_fb:'Presentation notes',
+  taste:'Taste (1-5)',
+  taste_fb:'Taste notes',
+  balance:'Balance (1 bland - 5 rich)',
+  order:'Order likelihood (1-5)',
+  comment:'Other comments'
+};
+const SLUG2NAME={};
+ACTIVE_ROUNDS.forEach(r=>r.dishes.forEach(d=>SLUG2NAME[slug(d)]=d));
+function prettyKey(k){
+  if(k==='id') return 'id';                 // kept as-is so the Apps Script upsert still matches
+  if(k==='timestamp') return 'Submitted at';
+  if(k==='name') return 'Name';
+  if(k==='standout') return 'Standout dish';
+  if(k==='missed') return 'Needs most work';
+  if(k==='experience') return 'Experience feedback';
+  const i=k.indexOf('__');
+  if(i>-1){ const sl=k.slice(0,i), f=k.slice(i+2); return (SLUG2NAME[sl]||sl)+' — '+(FIELD_LABELS[f]||f); }
+  return k;
+}
+function labeled(obj){ const out={}; Object.keys(obj).forEach(k=>{ out[prettyKey(k)]=obj[k]; }); return out; }
+function rawFlat(resp){ return Object.assign({id:resp.id, timestamp:resp.timestamp, name:resp.name}, resp.answers); }
+function buildFlat(){ return current ? labeled(rawFlat(current)) : {}; }
 function syncToSheet(){ if(current) submitToSheet(buildFlat()); }   // incremental upsert after each round
 function persist(resp){
-  const flat=Object.assign({id:resp.id, timestamp:resp.timestamp, name:resp.name}, resp.answers);
+  const flat=labeled(rawFlat(resp));
   const all=getAll();all.push(flat);localStorage.setItem(STORE_KEY,JSON.stringify(all)); // local backup
   submitToSheet(flat);
 }
