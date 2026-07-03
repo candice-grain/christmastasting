@@ -79,7 +79,7 @@
   .tm-inner{text-align:center;padding:0 20px}
   .tm-logo{height:30px;width:auto;margin-bottom:5px}
   .tm-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--ink)}
-  .tm-name{font-size:21px;font-weight:700;line-height:1.05;margin:4px 0 3px;color:var(--ink)}
+  .tm-name{font-size:18px;font-weight:700;line-height:1.12;margin:5px 0 4px;color:var(--ink)}
   .tm-sub{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink);opacity:.75}
 
   input[type=text],textarea,select{
@@ -181,7 +181,7 @@
         <li>Taste one dish at a time and try not to mix flavours (a sip of water between helps).</li>
         <li>Jot your thoughts down as you eat, while the bite is still fresh.</li>
         <li>Be super honest &mdash; the more candid you are, the better the menu gets.</li>
-        <li>And most of all, have fun playing food critic.</li>
+        <li>And most of all, have fun with it — today, you're a professional food taster.</li>
       </ul>
     </div>
   </section>
@@ -236,13 +236,13 @@
   <section id="screen-thanks" class="hidden">
     <div class="card">
       <div class="roundmsg">
-        <h2 style="margin-bottom:2px">That's a wrap — thank you!</h2>
+        <h2 id="thanksHeading" style="margin-bottom:2px">That's a wrap — thank you!</h2>
         <p style="margin-bottom:16px">Your feedback goes straight to the chefs. You've earned your badge:</p>
         <div class="tm-badge">
           <div class="tm-inner">
             <img class="tm-logo" alt="Grain">
-            <div class="tm-title">Official</div>
-            <div class="tm-name" id="badgeName">Tastemaker</div>
+            <div class="tm-title">Officially a</div>
+            <div class="tm-name">Professional Food Taster</div>
             <div class="tm-sub">Christmas 2026</div>
           </div>
         </div>
@@ -309,10 +309,10 @@ const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbydhLZCRWtYki
 const ACTIVE_ROUNDS = ROUNDS.filter(r=>r.dishes && r.dishes.length);
 
 const SCALE = {
-  presentation:{q:"Rate the presentation", ends:["Not appetising","Mouthwatering"]},
-  taste:{q:"Rate the taste", ends:["Didn't like","Loved it"]},
-  order:{q:"How likely are you to order this dish?", ends:["Not likely","Very likely"]},
-  balance:{q:"How's the balance of flavours?", ends:["Too bland","Too rich / salty"], mid:"Just right"}
+  presentation:{q:"How does it look?", ends:["Doesn't tempt me","Want it now"]},
+  taste:{q:"Overall, how much did you enjoy it?", ends:["Not for me","Loved it"], hint:"Your gut reaction — how much you love eating it."},
+  order:{q:"How likely are you to order this dish?", ends:["Probably not","Definitely"]},
+  flavour:{q:"How's the flavour?", ends:["Too bland","Too much"], mid:"Just right", hint:"Seasoning & intensity — not whether you like it."}
 };
 
 /* ---------- helpers ---------- */
@@ -326,6 +326,19 @@ let roundIndex=0;
 let currentStop='about';
 let maxStopIndex=0;
 const STORE_KEY='grain_xmas2026_tasting';
+const DRAFT_KEY='grain_xmas2026_draft';   // in-progress session (own-device resume)
+
+/* ---------- draft (resume after refresh) ---------- */
+function saveDraft(){
+  try{
+    if(!current){localStorage.removeItem(DRAFT_KEY);return;}
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({current, roundIndex, maxStopIndex, stop:currentStop}));
+  }catch(_){}
+}
+function loadDraft(){ try{return JSON.parse(localStorage.getItem(DRAFT_KEY));}catch(_){return null;} }
+function clearDraft(){ try{localStorage.removeItem(DRAFT_KEY);}catch(_){} }
+/* pull the live round DOM into current.answers, then persist */
+function autosaveRound(){ if(current && currentStop==='round'){ try{saveRoundToState();saveDraft();}catch(_){} } }
 
 /* ---------- render ---------- */
 function scaleHtml(name, cfg){
@@ -367,7 +380,7 @@ function dishHtml(dish){
       </div>
 
       <div class="q" data-req>
-        <p class="q-text">${SCALE.taste.q} <span class="req">*</span></p>
+        <p class="q-text">${SCALE.taste.q} <span class="req">*</span><span class="hint">${SCALE.taste.hint}</span></p>
         ${scaleHtml(id+'__taste', SCALE.taste)}
         <div class="err">Please rate 1–5.</div>
       </div>
@@ -378,9 +391,14 @@ function dishHtml(dish){
       </div>
 
       <div class="q" data-req>
-        <p class="q-text">${SCALE.balance.q} <span class="req">*</span></p>
-        ${scaleHtml(id+'__balance', SCALE.balance)}
+        <p class="q-text">${SCALE.flavour.q} <span class="req">*</span><span class="hint">${SCALE.flavour.hint}</span></p>
+        ${scaleHtml(id+'__flavour', SCALE.flavour)}
         <div class="err">Please rate 1–5.</div>
+      </div>
+      <div class="q feedback hidden" data-feedback-for="flavour" data-req-text>
+        <p class="q-text"><span data-fb-label></span> <span class="req">*</span></p>
+        <textarea name="${id}__flavour_fb" placeholder="Your answer"></textarea>
+        <div class="err">Please add a note here.</div>
       </div>
 
       <div class="q" data-req>
@@ -483,6 +501,7 @@ function validateName(){
 
 /* ---------- flow ---------- */
 function goName(){
+  currentStop='about';
   show('screen-name');renderSteps('about');
   const resuming=!!current;
   if(resuming){
@@ -507,9 +526,11 @@ function nameNext(){
   goRound();
 }
 function goRound(){
+  currentStop='round';
   renderRound(roundIndex);
   maxStopIndex=Math.max(maxStopIndex, stopIndex(roundStepKey()));
   show('screen-round');renderSteps(roundStepKey());
+  saveDraft();
   const first=roundIndex===0;
   setBar(`
     ${first?'':'<button class="btn btn-dark" id="rBack">Back</button>'}
@@ -546,22 +567,29 @@ function validateRound(){
 function submitRound(){
   if(!validateRound()) return;
   saveRoundToState();
+  saveDraft();
   syncToSheet();
 
   if(roundIndex < ACTIVE_ROUNDS.length-1){
-    show('screen-between');renderSteps(roundStepKey());
-    document.getElementById('betweenTitle').textContent=ACTIVE_ROUNDS[roundIndex].title+' saved ✓';
-    const next=ACTIVE_ROUNDS[roundIndex+1];
-    document.getElementById('betweenText').textContent='Take a breather, cleanse the palate, then start '+next.title+'.';
-    setBar(`
-      <button class="btn btn-dark" id="bBack">Back</button>
-      <button class="btn btn-primary grow" id="bNext">Start ${next.title} →</button>
-    `);
-    document.getElementById('bBack').onclick=()=>goRound();
-    document.getElementById('bNext').onclick=()=>{roundIndex++; goRound();};
+    goBetween();
   } else {
     goClosing();
   }
+}
+function goBetween(){
+  const next=ACTIVE_ROUNDS[roundIndex+1];
+  if(!next){ goClosing(); return; }
+  currentStop='between';
+  show('screen-between');renderSteps(roundStepKey());
+  document.getElementById('betweenTitle').textContent=ACTIVE_ROUNDS[roundIndex].title+' saved ✓';
+  document.getElementById('betweenText').textContent='Take a breather, cleanse the palate, then start '+next.title+'.';
+  setBar(`
+    <button class="btn btn-dark" id="bBack">Back</button>
+    <button class="btn btn-primary grow" id="bNext">Start ${next.title} →</button>
+  `);
+  document.getElementById('bBack').onclick=()=>goRound();
+  document.getElementById('bNext').onclick=()=>{roundIndex++; goRound();};
+  saveDraft();
 }
 
 /* ---------- state store / restore ---------- */
@@ -578,11 +606,12 @@ function saveRoundToState(){
       current.answers[id+'__presentation_fb']=ta('presentation_fb');
       current.answers[id+'__taste']=g('taste');
       current.answers[id+'__taste_fb']=ta('taste_fb');
-      current.answers[id+'__balance']=g('balance');
+      current.answers[id+'__flavour']=g('flavour');
+      current.answers[id+'__flavour_fb']=ta('flavour_fb');
       current.answers[id+'__order']=g('order');
       current.answers[id+'__comment']=ta('comment');
     }else{
-      ['presentation','presentation_fb','taste','taste_fb','balance','order','comment'].forEach(k=>current.answers[id+'__'+k]='');
+      ['presentation','presentation_fb','taste','taste_fb','flavour','flavour_fb','order','comment'].forEach(k=>current.answers[id+'__'+k]='');
     }
   });
 }
@@ -596,13 +625,13 @@ function restoreRound(i){
       const sel=sec.querySelector('[data-tasted]');sel.value=t;
       toggleBody(sel);
       if(t==='Yes'){
-        ['presentation','taste','order','balance'].forEach(k=>{
+        ['presentation','taste','order','flavour'].forEach(k=>{
           const v=current.answers[id+'__'+k];
           if(v){const r=sec.querySelector(`input[name="${id}__${k}"][value="${CSS.escape(v)}"]`);if(r){r.checked=true;markChecked(r);}}
         });
-        toggleFeedback(sec,'presentation');toggleFeedback(sec,'taste');
         const setTa=(n)=>{const v=current.answers[id+'__'+n];if(v){const el=sec.querySelector(`[name="${id}__${n}"]`);if(el)el.value=v;}};
-        setTa('presentation_fb');setTa('taste_fb');setTa('comment');
+        setTa('presentation_fb');setTa('taste_fb');setTa('flavour_fb');setTa('comment');
+        toggleFeedback(sec,'presentation');toggleFeedback(sec,'taste');toggleFeedback(sec,'flavour');
       }
     }
   });
@@ -621,6 +650,7 @@ function goClosing(){
   if(current.answers.missed)mi.value=current.answers.missed;
   if(current.answers.experience)document.getElementById('experience').value=current.answers.experience;
 
+  currentStop='closing';
   maxStopIndex=Math.max(maxStopIndex, stopIndex('done'));
   show('screen-closing');renderSteps('done');
   setBar(`
@@ -629,6 +659,7 @@ function goClosing(){
   `);
   document.getElementById('cBack').onclick=()=>goRound();
   document.getElementById('cFinish').onclick=finish;
+  saveDraft();
 }
 function finish(){
   const so=document.getElementById('standout'), mi=document.getElementById('missed');
@@ -642,12 +673,14 @@ function finish(){
   current.answers.missed=mi.value;
   current.answers.experience=document.getElementById('experience').value.trim();
   persist(current);
-  const bn=document.getElementById('badgeName'); if(bn) bn.textContent=current.name;
+  clearDraft();
+  const bn=document.getElementById('thanksHeading'); if(bn) bn.textContent='Nice work, '+current.name+'!';
   const bl=document.querySelector('.tm-logo'), hl=document.querySelector('.logo img'); if(bl&&hl) bl.src=hl.src;
   show('screen-thanks');renderSteps('done');
   document.getElementById('bar').style.display='none';
 }
 function resetAll(){
+  clearDraft();
   current=null;roundIndex=0;currentStop='about';maxStopIndex=0;
   document.getElementById('name').value='';
   document.getElementById('experience').value='';
@@ -671,15 +704,23 @@ function toggleBody(sel){
 }
 const FB_LABELS={
   presentation:{low:"What would you improve about how it looks?", high:"What stood out about how it looks?"},
-  taste:{low:"What would you improve about the taste?", high:"What stood out about the taste?"}
+  taste:{low:"What would you improve about the taste?", high:"What stood out about the taste?"},
+  flavour:{low:"What would lift it? (more seasoning, acid, depth…)", high:"What's too much? (salty, sweet, rich, jelak…)"}
 };
 function toggleFeedback(sec, aspect){
   const score=sec.querySelector(`[name="${sec.dataset.dish}__${aspect}"]:checked`);
   const fb=sec.querySelector(`[data-feedback-for="${aspect}"]`);
   if(!fb)return;
   if(!score){fb.classList.add('hidden');return;}
+  const v=Number(score.value);
+  // Flavour "Just right" (3) needs no explanation — hide + clear so it isn't required
+  if(aspect==='flavour' && v===3){
+    fb.classList.add('hidden'); fb.classList.remove('invalid');
+    const ta=fb.querySelector('textarea'); if(ta) ta.value='';
+    return;
+  }
   fb.classList.remove('hidden');
-  const low=Number(score.value)<=3;
+  const low = aspect==='flavour' ? v<3 : v<=3;
   fb.querySelector('[data-fb-label]').textContent = low?FB_LABELS[aspect].low:FB_LABELS[aspect].high;
 }
 function markChecked(radio){
@@ -693,9 +734,10 @@ document.addEventListener('change', e=>{
   if(t.type==='radio'){
     markChecked(t);
     const q=t.closest('.q');if(q)q.classList.remove('invalid');
-    const fbm=t.name.match(/__(presentation|taste)$/);
+    const fbm=t.name.match(/__(presentation|taste|flavour)$/);
     if(fbm){const sec=t.closest('[data-dish]');if(sec)toggleFeedback(sec,fbm[1]);}
   }
+  autosaveRound();
 });
 document.addEventListener('input', e=>{
   if(e.target.id==='name'){
@@ -707,19 +749,27 @@ document.addEventListener('input', e=>{
     const badge=document.getElementById('clubBadge');
     if(badge) badge.textContent = 'Grain Tastemakers';
     if(v) document.getElementById('q-name').classList.remove('invalid');
+    if(current){current.name=v; saveDraft();}
   }
-  if(e.target.tagName==='TEXTAREA'){const q=e.target.closest('.q');if(q && e.target.value.trim())q.classList.remove('invalid');}
+  if(e.target.tagName==='TEXTAREA'){
+    const q=e.target.closest('.q');if(q && e.target.value.trim())q.classList.remove('invalid');
+    if(e.target.id==='experience'){ if(current){current.answers.experience=e.target.value.trim(); saveDraft();} }
+    else { autosaveRound(); }
+  }
 });
 document.addEventListener('change', e=>{
   if((e.target.id==='standout'||e.target.id==='missed') && e.target.value){
     const q=e.target.closest('.q');if(q)q.classList.remove('invalid');
+  }
+  if((e.target.id==='standout'||e.target.id==='missed') && current){
+    current.answers[e.target.id]=e.target.value; saveDraft();
   }
 });
 
 /* ---------- storage + sheets ---------- */
 function columns(){
   const cols=['timestamp','name'];
-  allDishes().forEach(d=>{const id=slug(d);cols.push(id+'__tasted',id+'__presentation',id+'__presentation_fb',id+'__taste',id+'__taste_fb',id+'__balance',id+'__order',id+'__comment');});
+  allDishes().forEach(d=>{const id=slug(d);cols.push(id+'__tasted',id+'__presentation',id+'__presentation_fb',id+'__taste',id+'__taste_fb',id+'__flavour',id+'__flavour_fb',id+'__order',id+'__comment');});
   cols.push('standout','missed','experience');
   return cols;
 }
@@ -731,7 +781,8 @@ const FIELD_LABELS={
   presentation_fb:'Presentation notes',
   taste:'Taste (1-5)',
   taste_fb:'Taste notes',
-  balance:'Balance (1 bland - 5 rich)',
+  flavour:'Flavour (1 too bland - 5 too much)',
+  flavour_fb:'Flavour notes',
   order:'Order likelihood (1-5)',
   comment:'Other comments'
 };
@@ -768,6 +819,21 @@ if(!ACTIVE_ROUNDS.length){
   document.querySelector('.wrap').innerHTML='<div class="card"><h2>No dishes configured</h2><p class="sub">Add dishes to a round in the ROUNDS config at the top of the script.</p></div>';
 }else{
   document.getElementById('steps').addEventListener('click', e=>{const s=e.target.closest('.step'); if(s && s.dataset.k) onStepClick(s.dataset.k);});
+  resumeOrStart();
+}
+function resumeOrStart(){
+  const d=loadDraft();
+  if(d && d.current){
+    current=d.current;
+    roundIndex=Math.min(d.roundIndex||0, ACTIVE_ROUNDS.length-1);
+    maxStopIndex=d.maxStopIndex||0;
+    currentStop=d.stop||'about';
+    if(currentStop==='round') goRound();
+    else if(currentStop==='between') goBetween();
+    else if(currentStop==='closing') goClosing();
+    else goName();   // 'about' → name screen shows "Continue →"
+    return;
+  }
   goName();
 }
 </script>
