@@ -236,17 +236,9 @@
   <section id="screen-thanks" class="hidden">
     <div class="card">
       <div class="roundmsg">
-        <h2 id="thanksHeading" style="margin-bottom:2px">That's a wrap — thank you!</h2>
-        <p style="margin-bottom:16px">Your feedback goes straight to the chefs. You've earned your badge:</p>
-        <div class="tm-badge">
-          <div class="tm-inner">
-            <img class="tm-logo" alt="Grain">
-            <div class="tm-title">Officially a</div>
-            <div class="tm-name">Professional Food Taster</div>
-            <div class="tm-sub">Christmas 2026</div>
-          </div>
-        </div>
-        <p class="sub" style="margin-top:16px">Wear it with pride. See you at the next tasting!</p>
+        <h2 id="thanksHeading" style="margin-bottom:10px">Congratulations — thank you!</h2>
+        <p style="margin:0 0 12px;color:var(--ink)">You're officially a <strong>professional food taster</strong>. Your feedback goes straight to our chefs to help finalise this year's Christmas menu.</p>
+        <p class="sub" style="margin:0">Stay tuned — you'll be first to know when the new menu drops.</p>
       </div>
     </div>
   </section>
@@ -278,7 +270,7 @@ const ROUNDS = [
   },
   {
     title:"Round 2",
-    subtitle:"Mains",
+    subtitle:"Seafood & Poultry",
     dishes:[
       "Agrodolce Fish Stew",
       "Confit Norwegian Salmon with Roe Caviar Sauce",
@@ -674,8 +666,7 @@ function finish(){
   current.answers.experience=document.getElementById('experience').value.trim();
   persist(current);
   clearDraft();
-  const bn=document.getElementById('thanksHeading'); if(bn) bn.textContent='Nice work, '+current.name+'!';
-  const bl=document.querySelector('.tm-logo'), hl=document.querySelector('.logo img'); if(bl&&hl) bl.src=hl.src;
+  const bn=document.getElementById('thanksHeading'); if(bn) bn.textContent='Congratulations, '+current.name+'!';
   show('screen-thanks');renderSteps('done');
   document.getElementById('bar').style.display='none';
 }
