@@ -285,7 +285,8 @@ const ROUNDS = [
     dishes:[
       "Wagyu Beef Shortrib and Oxtail Stew",
       "Cinnamon Roll",
-      "[Live station] Grain X Ember Striploin Carvery Station"
+      "[Live station] Grain X Ember Striploin Carvery Station",
+      "Strawberry Lemonade"
     ]
   }
 ];
@@ -299,6 +300,9 @@ const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbydhLZCRWtYki
 
 /* rounds that actually have dishes drive the flow */
 const ACTIVE_ROUNDS = ROUNDS.filter(r=>r.dishes && r.dishes.length);
+/* items that are drinks, not dishes — swaps the noun in the per-item questions */
+const DRINKS = new Set(["Strawberry Lemonade"]);
+const noun = name => DRINKS.has(name) ? "drink" : "dish";
 
 const SCALE = {
   presentation:{q:"How does it look?", ends:["Doesn't tempt me","Want it now"]},
@@ -348,7 +352,7 @@ function dishHtml(dish){
     <h3 class="dish-title">${dish}</h3>
 
     <div class="q" data-gate>
-      <p class="q-text">Did you taste this dish? <span class="req">*</span></p>
+      <p class="q-text">Did you taste this ${noun(dish)}? <span class="req">*</span></p>
       <div class="gate-wrap">
         <select name="${id}__tasted" data-tasted>
           <option value="">Choose…</option>
@@ -394,7 +398,7 @@ function dishHtml(dish){
       </div>
 
       <div class="q" data-req>
-        <p class="q-text">${SCALE.order.q} <span class="req">*</span></p>
+        <p class="q-text">${SCALE.order.q.replace('dish', noun(dish))} <span class="req">*</span></p>
         ${scaleHtml(id+'__order', SCALE.order)}
         <div class="err">Please rate 1–5.</div>
       </div>
